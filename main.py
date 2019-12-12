@@ -173,7 +173,7 @@ def main():
                 predicted_testing_price = calculate_model_function(degree, testing_sub_set_features, p0)
                 actual_testing_price = testing_sub_set_targets  # I know it's literally line 165 above, but it'll be easier to follow it for now
 
-                absolute_difference = np.absolute(predicted_testing_price.astype('float64'), actual_testing_price.astype('float64'))
+                absolute_difference = np.absolute(predicted_testing_price.astype('float64') - actual_testing_price.astype('float64'))
                 print(absolute_difference)
 
                 #
