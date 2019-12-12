@@ -153,8 +153,13 @@ def main():
     current_dataset = 0
     for dataset in datasets_over_800:
         current_dataset += 1
+
+        absolute_difference_per_degree = []
+
         for degree in [0, 1, 2, 3]:
             current_fold = 0
+
+            absolute_differences_for_all_folds = []
             for train_index, test_index in kf.split(dataset):
                 current_fold += 1
 
@@ -174,14 +179,15 @@ def main():
                 actual_testing_price = testing_sub_set_targets  # I know it's literally line 165 above, but it'll be easier to follow it for now
 
                 absolute_difference = np.absolute(predicted_testing_price.astype('float64') - actual_testing_price.astype('float64'))
-                print(absolute_difference)
 
-                #
-                # print("Hi5")
-                # stuff = regression(degree, training_sub_set_features, training_sub_set_targets)
-                # print("Hi6")
-                #
-                # print(stuff)
+                absolute_differences_for_all_folds= np.concatenate((absolute_differences_for_all_folds, absolute_difference) , axis=0)
+
+            absolute_difference_per_degree.append(np.mean(absolute_differences_for_all_folds))
+            print("absolute_difference_per_degree", absolute_difference_per_degree)
+            print("absolute_differences_for_all_folds", absolute_differences_for_all_folds)
+
+        best_degree = absolute_difference_per_degree.index(min(absolute_difference_per_degree))
+        print(absolute_difference_per_degree, "BEST DEGREE:", best_degree)
 
 
 main()
