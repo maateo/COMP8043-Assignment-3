@@ -147,6 +147,9 @@ def regression(degree_of_polynomial, training_data_features, training_data_targe
 def main():
     datasets_over_800 = task1()
 
+    ##################
+    #     Task 6     #
+    ##################
     number_of_kfolds = 5
 
     kf = model_selection.KFold(n_splits=number_of_kfolds, shuffle=True)
@@ -190,7 +193,9 @@ def main():
         best_degree = absolute_difference_per_degree.index(min(absolute_difference_per_degree))
         print(absolute_difference_per_degree, "BEST DEGREE:", best_degree)
 
-        # Task 7
+        ##################
+        #     Task 7     #
+        ##################
         dataset_features = np.array(dataset[['carat', 'depth', 'table']])
         dataset_targets = np.array(np.array(dataset['price']))
 
