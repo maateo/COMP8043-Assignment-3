@@ -200,8 +200,10 @@ def main():
         actual_price = dataset_targets
 
         plt.scatter(best_degree_predicted_price, actual_price)
-        plt.xlabel = "Predicted Price"
-        plt.ylabel = "Actual Price"
+        plt.xlabel("Predicted Price")
+        plt.ylabel("Actual Price")
+
+        plt.plot([min(actual_price), max(actual_price)], [min(actual_price), max(actual_price)], color='red')
 
         plt.show()
 
