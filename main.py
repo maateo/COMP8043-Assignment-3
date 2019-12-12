@@ -138,8 +138,6 @@ def regression(degree_of_polynomial, training_data_features, training_data_targe
     return p0
 
 
-
-
 # degree of the polynomial, the training data features and the training data targets
 # def task5(degree_of_polynomial, training_data_features, training_data_targets):
 #     parameter_vector_of_coefficients = np.zeros(dataset.shape[0])
@@ -152,30 +150,38 @@ def main():
 
     kf = model_selection.KFold(n_splits=number_of_kfolds, shuffle=True)
 
+    current_dataset = 0
     for dataset in datasets_over_800:
-        current_fold = 0
-
+        current_dataset += 1
         for degree in [0, 1, 2, 3]:
-
+            current_fold = 0
             for train_index, test_index in kf.split(dataset):
                 current_fold += 1
 
-                print("Hi1")
+                print("Current dataset: %d Current degree: %d Current fold: %d" % (current_dataset, degree, current_fold))
+
                 training_sub_set = dataset.iloc[train_index]
-                print("Hi2")
                 training_sub_set_features = np.array(training_sub_set[['carat', 'depth', 'table']])
-                print("Hi3")
                 training_sub_set_targets = np.array(training_sub_set['price'])
-                print("Hi4")
+
+                p0 = regression(degree, training_sub_set_features, training_sub_set_targets)
 
                 testing_sub_set = dataset.iloc[test_index]
+                testing_sub_set_features = np.array(testing_sub_set[['carat', 'depth', 'table']])
+                testing_sub_set_targets = np.array(testing_sub_set['price'])
 
+                predicted_testing_price = calculate_model_function(degree, testing_sub_set_features, p0)
+                actual_testing_price = testing_sub_set_targets  # I know it's literally line 165 above, but it'll be easier to follow it for now
 
-                print("Hi5")
-                stuff = regression(degree, training_sub_set_features, training_sub_set_targets)
-                print("Hi6")
+                absolute_difference = np.absolute(predicted_testing_price.astype('float64'), actual_testing_price.astype('float64'))
+                print(absolute_difference)
 
-                print(stuff)
+                #
+                # print("Hi5")
+                # stuff = regression(degree, training_sub_set_features, training_sub_set_targets)
+                # print("Hi6")
+                #
+                # print(stuff)
 
 
 main()
