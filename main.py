@@ -6,6 +6,7 @@
 import pandas as pd
 import numpy as np
 from sklearn import model_selection
+import matplotlib.pyplot as plt
 
 
 ##################
@@ -180,7 +181,7 @@ def main():
 
                 absolute_difference = np.absolute(predicted_testing_price.astype('float64') - actual_testing_price.astype('float64'))
 
-                absolute_differences_for_all_folds= np.concatenate((absolute_differences_for_all_folds, absolute_difference) , axis=0)
+                absolute_differences_for_all_folds = np.concatenate((absolute_differences_for_all_folds, absolute_difference), axis=0)
 
             absolute_difference_per_degree.append(np.mean(absolute_differences_for_all_folds))
             print("absolute_difference_per_degree", absolute_difference_per_degree)
@@ -188,6 +189,21 @@ def main():
 
         best_degree = absolute_difference_per_degree.index(min(absolute_difference_per_degree))
         print(absolute_difference_per_degree, "BEST DEGREE:", best_degree)
+
+        # Task 7
+        dataset_features = np.array(dataset[['carat', 'depth', 'table']])
+        dataset_targets = np.array(np.array(dataset['price']))
+
+        p0 = regression(best_degree, dataset_features, dataset_targets)
+
+        best_degree_predicted_price = calculate_model_function(best_degree, dataset_features, p0)
+        actual_price = dataset_targets
+
+        plt.scatter(best_degree_predicted_price, actual_price)
+        plt.xlabel = "Predicted Price"
+        plt.ylabel = "Actual Price"
+
+        plt.show()
 
 
 main()
