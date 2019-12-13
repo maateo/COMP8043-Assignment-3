@@ -12,62 +12,38 @@ import matplotlib.pyplot as plt
 ##################
 #     Task 1     #
 ##################
-def task1():
+def pre_processing():
     data = pd.read_csv("diamonds.csv")  # Load the diamonds file
-    relevant_data = data.drop(columns=['Unnamed: 0', 'x', 'y', 'z'])
-    # cut_quality = data['cut']
-    # color_grades = data['color']
-    # clarity_grades = data['clarity']
-    #
-    # # Features:
-    # carat = data['carat']
-    # depth = data['depth']
-    # table_value = data['table']
-    #
-    # # Target:
-    # selling_price = data['price']
-    #
-    # # A data point is a discrete unit of information. In a general sense, any single fact is a data point.
-    # # In a statistical or analytical context, a data point is usually derived from a measurement or research
-    # # and can be represented numerically and/or graphically
-    # #
-    # # So... "For each combination of these cut, colour and clarity grades extract the corresponding data-points"
-    # # now, ('ideal', 'e', 'vs2') : [(carat, depth, table_value), (carat, depth, table_value), (carat, depth, table_value)]
-    #
-    # # Going grade-by-grade split the data-points into features [1 point] and targets [1 point]
-    # # What is grade by grade? Is grade a combination of quality, color and clarity?
-    # #      * Yes, "... to the various different grades (e.g. ('Ideal', 'E', 'VS2'))"...
-    # # So...
-    #
-    # # quality_combination = map(lambda : cut, color, clarity : [cut, color, clarity], cut_quality, color_grades, clarity_grades))
+    relevant_data = data.drop(columns=['Unnamed: 0', 'x', 'y', 'z'])  # Remove unused columns
 
     # extracts what types of cut qualities [1 point], colour grades [1 point], and clarity grades [1 point] are represented
     category_grade_combinations = relevant_data[['cut', 'color', 'clarity']]
 
-    category_grade_combinations_frequency_count = (category_grade_combinations.groupby(category_grade_combinations.columns.tolist()).size().reset_index().rename(columns={0: 'count'}))
+    # Get frequency of each combination
+    category_grade_combinations_frequency_count = category_grade_combinations.groupby(category_grade_combinations.columns.tolist()) \
+        .size() \
+        .reset_index() \
+        .rename(columns={0: 'count'})
+    print("Frequencies of each category:\n", category_grade_combinations_frequency_count)
 
     category_grade_combinations_over_800 = category_grade_combinations_frequency_count[category_grade_combinations_frequency_count["count"] > 800]
-    print("category_grade_combinations_over_800", category_grade_combinations_over_800)
+    print("category_grade_combinations_over_800:\n", category_grade_combinations_over_800)
 
     datasets_over_800 = []
     for index, row in category_grade_combinations_over_800.iterrows():
         datasets_over_800.append(relevant_data.loc[(data['cut'] == row['cut']) & (relevant_data['color'] == row['color']) & (relevant_data['clarity'] == row['clarity'])])
 
-    print("datasets_over_800", datasets_over_800)
+    print("datasets_over_800:\n", datasets_over_800)
 
     return datasets_over_800
-    # 280 unqie combinations/ categories
-    # (cut, color, clarity) : [ (carat, depth, table) : price, (carat, depth, table) : price)
-
-    # determine value from its shape (depth and table), weight (carat)
 
 
 ##################
 #     Task 2     #
 ##################
-def num_coefficients_3(d):
+def num_coefficients_3(degree):
     t = 0
-    for n in range(d + 1):
+    for n in range(degree + 1):
         for i in range(n + 1):
             for j in range(n + 1):
                 for k in range(n + 1):
@@ -77,75 +53,62 @@ def num_coefficients_3(d):
 
 
 def calculate_model_function(degree_of_polynomial, list_of_feature_vectors, parameter_vector_of_coefficients):
-    r = np.zeros(list_of_feature_vectors.shape[0])
+    result = np.zeros(list_of_feature_vectors.shape[0])
     t = 0
     for n in range(degree_of_polynomial + 1):
         for i in range(n + 1):
             for j in range(n + 1):
                 for k in range(n + 1):
                     if i + j + k == n:
-                        r += parameter_vector_of_coefficients[k] * (list_of_feature_vectors[:, 0] ** i) * (list_of_feature_vectors[:, 1] ** (n - i))
+                        result += parameter_vector_of_coefficients[k] * (list_of_feature_vectors[:, 0] ** i) * (list_of_feature_vectors[:, 1] ** (n - i))
                         t = t + 1
-    return r
+    return result
 
 
 ##################
 #     Task 3     #
 ##################
-def calculate_modal_function_and_jacobian(degree_of_polynomial, feature_vectors, coefficient_of_linerization_point):
-    # TODO: calculate and return:
-    #  the estimated target vector
-    #  Jacobian at the linerisation point
-
-    return 0
-
-
-def linearize(deg, data, p0):
-    f0 = calculate_model_function(deg, data, p0)
-    J = np.zeros((len(f0), len(p0)))
+def linearize(degree_of_polynomial, feature_vectors, coefficients_of_linearization_point):
+    estimated_target_vector = calculate_model_function(degree_of_polynomial, feature_vectors, coefficients_of_linearization_point)
+    Jacobian = np.zeros((len(estimated_target_vector), len(coefficients_of_linearization_point)))
     epsilon = 1e-6
-    for i in range(len(p0)):
-        p0[i] += epsilon
-        fi = calculate_model_function(deg, data, p0)
-        p0[i] -= epsilon
-        di = (fi - f0) / epsilon
-        J[:, i] = di
-    return f0, J
+    for i in range(len(coefficients_of_linearization_point)):
+        coefficients_of_linearization_point[i] += epsilon
+        fi = calculate_model_function(degree_of_polynomial, feature_vectors, coefficients_of_linearization_point)
+        coefficients_of_linearization_point[i] -= epsilon
+        di = (fi - estimated_target_vector) / epsilon
+        Jacobian[:, i] = di
+    return estimated_target_vector, Jacobian
 
 
 ##################
 #     Task 4     #
 ##################
-def calculate_update(y, f0, J):
+def calculate_parameter_update(y, f0, Jacobian):
     l = 1e-2
-    N = np.matmul(J.T, J) + l * np.eye(J.shape[1])
-    r = y - f0
-    n = np.matmul(J.T, r)
-    dp = np.linalg.solve(N, n)
-    return dp
+    normal_equation_matrix = np.matmul(Jacobian.T, Jacobian) + l * np.eye(Jacobian.shape[1])
+    residual = y - f0
+    normal_equation_system = np.matmul(Jacobian.T, residual)
+    optimal_parameter_update = np.linalg.solve(normal_equation_matrix, normal_equation_system)
+    return optimal_parameter_update
 
 
 ##################
 #     Task 5     #
 ##################
 def regression(degree_of_polynomial, training_data_features, training_data_targets):
-    max_iter = 10
+    max_iterations = 10
     p0 = np.zeros(num_coefficients_3(degree_of_polynomial))
-    for i in range(max_iter):
-        f0, J = linearize(degree_of_polynomial, training_data_features, p0)
-        dp = calculate_update(training_data_targets, f0, J)
+    for i in range(max_iterations):
+        f0, Jacobian = linearize(degree_of_polynomial, training_data_features, p0)
+        dp = calculate_parameter_update(training_data_targets, f0, Jacobian)
         p0 += dp
 
     return p0
 
 
-# degree of the polynomial, the training data features and the training data targets
-# def task5(degree_of_polynomial, training_data_features, training_data_targets):
-#     parameter_vector_of_coefficients = np.zeros(dataset.shape[0])
-
-
 def main():
-    datasets_over_800 = task1()
+    datasets_over_800 = pre_processing()
 
     ##################
     #     Task 6     #
@@ -180,15 +143,13 @@ def main():
                 testing_sub_set_targets = np.array(testing_sub_set['price'])
 
                 predicted_testing_price = calculate_model_function(degree, testing_sub_set_features, p0)
-                actual_testing_price = testing_sub_set_targets  # I know it's literally line 165 above, but it'll be easier to follow it for now
+                actual_testing_price = testing_sub_set_targets
 
                 absolute_difference = np.absolute(predicted_testing_price.astype('float64') - actual_testing_price.astype('float64'))
 
                 absolute_differences_for_all_folds = np.concatenate((absolute_differences_for_all_folds, absolute_difference), axis=0)
 
             absolute_difference_per_degree.append(np.mean(absolute_differences_for_all_folds))
-            print("absolute_difference_per_degree", absolute_difference_per_degree)
-            print("absolute_differences_for_all_folds", absolute_differences_for_all_folds)
 
         best_degree = absolute_difference_per_degree.index(min(absolute_difference_per_degree))
         print(absolute_difference_per_degree, "BEST DEGREE:", best_degree)
